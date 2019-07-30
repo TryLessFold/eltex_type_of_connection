@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <pthread.h>
+#include <malloc.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+
+#define SIZE_ADDR sizeof(sockaddr_in)
+
+struct tid_l
+{
+	pthread_t val;
+	struct tid_l* next;
+	struct tid_l* prev;
+};
+
+typedef struct pack
+{
+	struct sockaddr_in cl_addr;
+	char buff[256];
+} pack_t;
+
+void AddList(struct tid_l** head, struct tid_l** tail, pthread_t v)
+{
+	if ((*head) == NULL)
+	{
+		(*head) = (struct tid_l*)malloc(sizeof(struct tid_l));
+		(*head) -> val = v;
+		(*head) -> next = NULL;
+		(*head) -> prev = NULL;
+		(*tail) = (*head);
+	}
+	else
+	{
+		struct tid_l *tmp = (struct tid_l*)malloc(sizeof(struct tid_l));
+		tmp -> val = v;
+		tmp -> next = NULL;
+		tmp -> prev = (*tail);
+		(*tail) -> next = tmp;
+		(*tail) = tmp;
+	}
+}
+
+int Remove(struct tid_l** head, struct tid_l**tail, pthread_t val)
+{
+	struct tid_l *tmp = (*head);
+	while(!pthread_equal(val, tmp->val))
+	{
+		tmp = tmp->next;
+		if (tmp == NULL)
+			return -1;
+	}
+	if ((*head)==(*tail))
+	{
+		free((*head));
+		(*head) = (*tail) = NULL;
+	}
+	else if (tmp == (*head))
+	{
+		(*head) = tmp->next;
+		(*head)->prev = NULL;
+		free(tmp);
+	}
+	else if(tmp == (*tail))
+	{
+		(*tail) = tmp->prev;
+		(*tail)->next = NULL;
+		free(tmp);
+	}
+	else
+	{
+		tmp->prev->next = tmp->next;
+		tmp->next->prev = tmp->prev;
+		free(tmp);
+	}
+	return 0;
+}
+
+struct tid_l *tid_h = NULL, *tid_t = NULL;
+
+void *handler(void* ptr)
+{
+	
+}
+
+int main()
+{
+	pthread_t tid;
+	int socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	struct sockaddr_in serv, cl;
+	serv.sin_family = AF_INET;
+	serv.sin_port = htons(7777);
+	serv.sin_addr.s_addr = inet_addr("127.0.0.1");
+	bind(socket_fd, &serv, SIZE_ADDR);
+	while(1)
+	{
+	}
+	shutdown(fd, SHUT_RDWR);
+	return 0;
+}
